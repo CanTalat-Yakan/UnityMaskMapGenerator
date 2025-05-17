@@ -1,0 +1,17 @@
+{
+  "name": "com.unityessentials.maskmapgenerator",
+  "version": "1.0.0",
+  "displayName": "UnityEssentials MaskMapGenerator",
+  "description": "This is a part of the UnityEssentials Ecosystem",
+  "unity": "2022.1",
+  "documentationUrl": "",
+  "changelogUrl": "",
+  "licensesUrl": "",
+  "dependencies": { "com.unityessentials.essentials": "1.0.0" },
+  "keywords": [],
+  "author": {
+    "name": "Unity Essentials",
+    "email": "",
+    "url": ""
+  }
+}
