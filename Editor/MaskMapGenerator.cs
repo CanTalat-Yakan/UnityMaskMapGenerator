@@ -6,6 +6,15 @@ using System.Text.RegularExpressions;
 
 namespace UnityEssentials
 {
+    /// <summary>
+    /// Provides a Unity Editor tool for combining grayscale mask maps into a single RGBA texture.
+    /// </summary>
+    /// <remarks>The <see cref="MaskMapGenerator"/> class allows users to pack multiple grayscale textures 
+    /// (Metallic, Ambient Occlusion, Detail Mask, and Smoothness/Roughness) into a single mask map texture.  It
+    /// provides a graphical interface for assigning textures, adjusting default values, and generating  the final
+    /// combined texture. The tool also includes options for previewing the result and saving the  final texture as a
+    /// PNG file.  This tool is accessible via the Unity Editor menu under "Tools/Mask Map Packer" or through the 
+    /// context menu in the Assets window.</remarks>
     public class MaskMapGenerator : EditorWindow
     {
         // Mask Map Textures
@@ -47,6 +56,18 @@ namespace UnityEssentials
             window.minSize = new Vector2(400, 300);
         }
 
+        /// <summary>
+        /// Renders the user interface for combining grayscale mask maps into a single RGBA texture.
+        /// </summary>
+        /// <remarks>This method provides a graphical interface for selecting input textures, configuring
+        /// default values,  and performing actions such as generating a preview texture, packing the textures into a
+        /// final mask map,  and saving the result. It also includes options for clearing inputs and previewing the
+        /// final texture.  The interface supports the following channels: - Metallic (R channel) - Ambient Occlusion (G
+        /// channel) - Detail Mask (B channel) - Smoothness or Roughness (A channel, depending on user selection)  Users
+        /// can assign textures to each channel or specify default values if a texture is not provided.  The method
+        /// ensures that all textures are properly configured (e.g., Read/Write enabled) and provides  options to fix
+        /// import settings if necessary.  Additional sections include preview options, actions for generating and
+        /// saving the final texture,  and a preview of the resulting texture.</remarks>
         public void OnGUI()
         {
             _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, true);
