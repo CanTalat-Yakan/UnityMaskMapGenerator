@@ -15,7 +15,7 @@ namespace UnityEssentials
     /// combined texture. The tool also includes options for previewing the result and saving the  final texture as a
     /// PNG file.  This tool is accessible via the Unity Editor menu under "Tools/Mask Map Packer" or through the 
     /// context menu in the Assets window.</remarks>
-    public class MaskMapGenerator : EditorWindow
+    public partial class MaskMapGenerator
     {
         // Mask Map Textures
         private Texture2D _metallic;
@@ -24,305 +24,16 @@ namespace UnityEssentials
         private Texture2D _smoothnessMap;
 
         // Default Values
-        private float _defaultMetal = 0.5f;
-        private float _defaultAO = 1f;
-        private float _defaultDetail = 0.5f;
-        private float _defaultSmoothness = 0.5f;
+        public float DefaultMetallic = 0.5f;
+        public float DefaultAO = 1f;
+        public float DefaultDetail = 0.5f;
+        public float DefaultSmoothness = 0.5f;
 
         // Processed Texture
         private Texture2D _finalTexture;
 
         // State Variables
-        private bool _isRoughnessMap = false;
         private Vector2Int _textureSize = Vector2Int.zero;
-        private Vector2 _scrollPosition;
-
-        // Foldout Sections
-        private bool _showTextureInputs = true;
-        private bool _showPreviewOptions = true;
-        private bool _showFinalTexturePreview = true;
-
-        [MenuItem("Tools/Mask Map Packer")]
-        public static void ShowWindow()
-        {
-            var window = GetWindow<MaskMapGenerator>("Mask Map Packer");
-            window.minSize = new Vector2(400, 600);
-        }
-
-        [MenuItem("Assets/Mask Map Packer")]
-        public static void ShowWindowContext()
-        {
-            var window = GetWindow<MaskMapGenerator>();
-            window.minSize = new Vector2(400, 300);
-        }
-
-        /// <summary>
-        /// Renders the user interface for combining grayscale mask maps into a single RGBA texture.
-        /// </summary>
-        /// <remarks>This method provides a graphical interface for selecting input textures, configuring
-        /// default values,  and performing actions such as generating a preview texture, packing the textures into a
-        /// final mask map,  and saving the result. It also includes options for clearing inputs and previewing the
-        /// final texture.  The interface supports the following channels: - Metallic (R channel) - Ambient Occlusion (G
-        /// channel) - Detail Mask (B channel) - Smoothness or Roughness (A channel, depending on user selection)  Users
-        /// can assign textures to each channel or specify default values if a texture is not provided.  The method
-        /// ensures that all textures are properly configured (e.g., Read/Write enabled) and provides  options to fix
-        /// import settings if necessary.  Additional sections include preview options, actions for generating and
-        /// saving the final texture,  and a preview of the resulting texture.</remarks>
-        public void OnGUI()
-        {
-            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, false, true);
-
-            GUILayout.Space(10f);
-
-            // Begin Horizontal Layout to add fixed space on the right
-            GUILayout.BeginHorizontal();
-
-            // Begin Vertical Layout for main content
-            GUILayout.BeginVertical();
-
-            // Header with Important Note
-            GUILayout.Label("Combine grayscale mask maps into a single RGBA texture:");
-            GUILayout.Space(10f);
-
-            // Texture Inputs Section
-            _showTextureInputs = EditorGUILayout.Foldout(_showTextureInputs, "Texture Inputs", true);
-            if (_showTextureInputs)
-            {
-                EditorGUI.indentLevel++;
-                GUILayout.BeginVertical("box");
-                GUILayout.Space(5f);
-
-                // Metallic
-                GUILayout.BeginVertical("box");
-                GUILayout.Label("Metallic (R Channel)", EditorStyles.boldLabel);
-                GUILayout.BeginHorizontal();
-
-                _metallic = (Texture2D)EditorGUILayout.ObjectField(
-                    new GUIContent(
-                        "Metallic Texture",
-                        "Grayscale texture for Metallic (R channel)"),
-                    _metallic, typeof(Texture2D), false);
-
-                // Conditionally show the Fix button
-                if (_metallic != null && !_metallic.isReadable)
-                    if (GUILayout.Button("Fix", GUILayout.Width(40)))
-                        FixTextureImportSettings(_metallic);
-
-                GUILayout.EndHorizontal();
-
-                if (_metallic == null)
-                {
-                    GUILayout.Label(
-                        new GUIContent(
-                            "No Metallic texture assigned. Use the slider below to set a default value.",
-                            "Default value for Metallic channel."),
-                        EditorStyles.helpBox);
-
-                    _defaultMetal = EditorGUILayout.Slider(
-                        new GUIContent(
-                            "Default Metallic",
-                            "Default Metallic value if no texture is assigned."),
-                        _defaultMetal, 0f, 1f);
-                }
-                GUILayout.EndVertical();
-                GUILayout.Space(5f);
-
-                // Ambient Occlusion
-                GUILayout.BeginVertical("box");
-                GUILayout.Label("Ambient Occlusion (G Channel)", EditorStyles.boldLabel);
-                GUILayout.BeginHorizontal();
-
-                _ambientOcclusion = (Texture2D)EditorGUILayout.ObjectField(
-                    new GUIContent(
-                        "Ambient Occlusion Texture",
-                        "Grayscale texture for Ambient Occlusion (G channel)"),
-                    _ambientOcclusion, typeof(Texture2D), false);
-
-                // Conditionally show the Fix button
-                if (_ambientOcclusion != null && !_ambientOcclusion.isReadable)
-                    if (GUILayout.Button("Fix", GUILayout.Width(40)))
-                        FixTextureImportSettings(_ambientOcclusion);
-
-                GUILayout.EndHorizontal();
-
-                if (_ambientOcclusion == null)
-                {
-                    GUILayout.Label(
-                        new GUIContent(
-                            "No Ambient Occlusion texture assigned. Use the slider below to set a default value.",
-                            "Default value for Ambient Occlusion channel."),
-                        EditorStyles.helpBox);
-
-                    _defaultAO = EditorGUILayout.Slider(
-                        new GUIContent(
-                            "Default AO",
-                            "Default Ambient Occlusion value if no texture is assigned."),
-                        _defaultAO, 0f, 1f);
-                }
-                GUILayout.EndVertical();
-                GUILayout.Space(5f);
-
-                // Detail Mask
-                GUILayout.BeginVertical("box");
-                GUILayout.Label("Detail Mask (B Channel)", EditorStyles.boldLabel);
-                GUILayout.BeginHorizontal();
-
-                _detailMask = (Texture2D)EditorGUILayout.ObjectField(
-                    new GUIContent(
-                        "Detail Mask Texture",
-                        "Grayscale texture for Detail Mask (B channel)"),
-                    _detailMask, typeof(Texture2D), false);
-
-                // Conditionally show the Fix button
-                if (_detailMask != null && !_detailMask.isReadable)
-                    if (GUILayout.Button("Fix", GUILayout.Width(40)))
-                        FixTextureImportSettings(_detailMask);
-
-                GUILayout.EndHorizontal();
-
-                if (_detailMask == null)
-                {
-                    GUILayout.Label(
-                        new GUIContent(
-                            "No Detail Mask texture assigned. Use the slider below to set a default value.",
-                            "Default value for Detail Mask channel."),
-                        EditorStyles.helpBox);
-
-                    _defaultDetail = EditorGUILayout.Slider(
-                        new GUIContent(
-                            "Default Detail Mask",
-                            "Default Detail Mask value if no texture is assigned."),
-                        _defaultDetail, 0f, 1f);
-                }
-                GUILayout.EndVertical();
-                GUILayout.Space(5f);
-
-                // Smoothness/Roughness
-                GUILayout.BeginVertical("box");
-                GUILayout.Label(_isRoughnessMap ? "Roughness (A Channel)" : "Smoothness (A Channel)", EditorStyles.boldLabel);
-                _isRoughnessMap = EditorGUILayout.Toggle(
-                    new GUIContent(
-                        "Is Roughness Map",
-                        "Toggle to indicate if the input texture is a Roughness map instead of Smoothness."),
-                    _isRoughnessMap);
-
-                GUILayout.BeginHorizontal();
-
-                _smoothnessMap = (Texture2D)EditorGUILayout.ObjectField(
-                    new GUIContent(
-                        _isRoughnessMap
-                            ? "Roughness Texture"
-                            : "Smoothness Texture",
-                        _isRoughnessMap
-                            ? "Grayscale texture for Roughness (A channel)"
-                            : "Grayscale texture for Smoothness (A channel)"),
-                    _smoothnessMap, typeof(Texture2D), false);
-
-                // Conditionally show the Fix button
-                if (_smoothnessMap != null && !_smoothnessMap.isReadable)
-                    if (GUILayout.Button("Fix", GUILayout.Width(40)))
-                        FixTextureImportSettings(_smoothnessMap);
-
-                GUILayout.EndHorizontal();
-
-                if (_smoothnessMap == null)
-                {
-                    GUILayout.Label(
-                        new GUIContent(
-                            $"No {(_isRoughnessMap ? "Roughness" : "Smoothness")} texture assigned. Use the slider below to set a default value.",
-                            $"Default value for {(_isRoughnessMap ? "Roughness" : "Smoothness")} channel."),
-                        EditorStyles.helpBox);
-                    _defaultSmoothness = EditorGUILayout.Slider(
-                        new GUIContent(
-                            $"Default {(_isRoughnessMap ? "Roughness" : "Smoothness")}",
-                            $"Default {(_isRoughnessMap ? "Roughness" : "Smoothness")} value if no texture is assigned."),
-                        _defaultSmoothness, 0f, 1f);
-
-                    if (_defaultSmoothness == 0 && _isRoughnessMap)
-                        GUILayout.Label(
-                            new GUIContent(
-                                "Roughness set to 0 means Smoothness is 1.",
-                                "Roughness value is inverted in the final texture."),
-                            EditorStyles.helpBox);
-                }
-                GUILayout.EndVertical();
-                GUILayout.Space(5f);
-
-                GUILayout.EndVertical();
-                EditorGUI.indentLevel--;
-            }
-
-            GUILayout.Space(10f);
-
-            // Preview and Actions Section
-            _showPreviewOptions = EditorGUILayout.Foldout(_showPreviewOptions, "Actions", true);
-            if (_showPreviewOptions)
-            {
-                EditorGUI.indentLevel++;
-                GUILayout.BeginVertical("box");
-                GUILayout.Space(5f);
-
-                // Action Buttons
-                GUILayout.BeginHorizontal();
-
-                if (GUILayout.Button(new GUIContent("Update Preview Texture", "Generate the preview texture based on current inputs.")))
-                {
-                    EditorUtility.DisplayProgressBar("Generating Preview", "Please wait...", 0.5f);
-                    UpdateTexture(asPreview: true);
-                    EditorUtility.ClearProgressBar();
-                }
-
-                if (GUILayout.Button(new GUIContent("Pack and Save Texture", "Combine inputs and save the final mask texture.")))
-                {
-                    EditorUtility.DisplayProgressBar("Packing Textures", "Please wait...", 0.5f);
-                    PackTextures();
-                    EditorUtility.ClearProgressBar();
-                }
-
-                if (GUILayout.Button(new GUIContent("Clear All", "Reset all inputs and outputs.")))
-                    ClearAll();
-
-                GUILayout.EndHorizontal();
-
-                GUILayout.Space(10f);
-                GUILayout.EndVertical();
-                EditorGUI.indentLevel--;
-            }
-
-            GUILayout.Space(10f);
-
-            // Final Texture Preview Section
-            _showFinalTexturePreview = EditorGUILayout.Foldout(_showFinalTexturePreview, "Final Texture Preview", true);
-            if (_showFinalTexturePreview && _finalTexture != null)
-            {
-                GUILayout.BeginVertical("box");
-                GUILayout.Label("Final Mask Map", EditorStyles.boldLabel);
-                GUILayout.Space(5f);
-                // Display the texture at a scaled-down size for preview
-                GUILayout.Label(_finalTexture, GUILayout.Width(256), GUILayout.Height(256));
-                GUILayout.EndVertical();
-                GUILayout.Space(10f);
-            }
-
-            // Footer
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.Label(
-                new GUIContent(
-                    "Ensure all textures are the same size, Read/Write enabled, and have sRGB correctly set in import settings."),
-                EditorStyles.helpBox);
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-
-            GUILayout.EndVertical(); // End of main vertical layout
-
-            // Add fixed 5-pixel space on the right
-            GUILayout.Space(5f);
-
-            GUILayout.EndHorizontal(); // End of horizontal layout
-
-            GUILayout.EndScrollView();
-        }
 
         /// <summary>
         /// Packs the textures and saves the final mask map as a PNG.
@@ -330,6 +41,7 @@ namespace UnityEssentials
         /// </summary>
         private void PackTextures()
         {
+            CheckTexture();
             UpdateTexture(asPreview: false);
 
             if (_finalTexture == null)
@@ -367,29 +79,21 @@ namespace UnityEssentials
             else Debug.LogWarning("Save operation canceled.");
         }
 
-        /// <summary>
-        /// Clears all assigned textures and resets default values.
-        /// </summary>
         private void ClearAll()
         {
-            if (EditorUtility.DisplayDialog("Clear All", "Are you sure you want to clear all inputs and outputs?", "Yes", "No"))
-            {
-                _metallic = null;
-                _ambientOcclusion = null;
-                _detailMask = null;
-                _smoothnessMap = null;
+            _metallic = null;
+            _ambientOcclusion = null;
+            _detailMask = null;
+            _smoothnessMap = null;
 
-                _defaultMetal = 0.5f;
-                _defaultAO = 1f;
-                _defaultDetail = 0.5f;
-                _defaultSmoothness = 0.5f;
+            DefaultMetallic = 0.5f;
+            DefaultAO = 1f;
+            DefaultDetail = 0.5f;
+            DefaultSmoothness = 0.5f;
 
-                _finalTexture = null;
-                _textureSize = Vector2Int.zero;
-                Repaint();
-
-                Debug.Log("All inputs and outputs have been cleared.");
-            }
+            _finalTexture = null;
+            _textureSize = Vector2Int.zero;
+            Repaint();
         }
 
         private float GetPixelValue(Texture2D texture, int x, int y)
@@ -515,8 +219,45 @@ namespace UnityEssentials
             // At this point, all readable textures have the same resolution
         }
 
+        private void CheckTexture()
+        {
+            bool needsFix = false;
+
+            Texture2D[] maskMaps = { _metallic, _ambientOcclusion, _detailMask, _smoothnessMap };
+            for (int i = 0; i < maskMaps.Length; i++)
+            {
+                var texture = maskMaps[i];
+                if (texture == null)
+                    continue;
+
+                if (!texture.isReadable || IsCrunchCompressed(texture))
+                    needsFix = true;
+            }
+
+            string message = "Some textures need to be fixed before packing"
+                + "\nClick OK to fix them automatically and continue, or Cancel to abort.";
+
+            if (EditorUtility.DisplayDialog("Fix Texture Import Settings", message, "OK", "Cancel"))
+            {
+                for (int i = 0; i < maskMaps.Length; i++)
+                {
+                    var texture = maskMaps[i];
+                    if (texture == null)
+                        continue;
+
+                    if (!texture.isReadable)
+                        FixTextureImportSettings(texture);
+                    else if (IsCrunchCompressed(texture))
+                        FixCrunchCompression(texture);
+                }
+                AssetDatabase.Refresh();
+            }
+        }
+
         private void UpdateTexture(bool asPreview)
         {
+            CheckTexture();
+
             // Reset textureSize before validation
             _textureSize = Vector2Int.zero;
 
@@ -548,15 +289,15 @@ namespace UnityEssentials
             {
                 for (int x = 0; x < _textureSize.x; x++)
                 {
-                    float r = (_metallic != null && _metallic.isReadable) ? GetPixelValue(_metallic, x, y) : _defaultMetal;
-                    float g = (_ambientOcclusion != null && _ambientOcclusion.isReadable) ? GetPixelValue(_ambientOcclusion, x, y) : _defaultAO;
-                    float b = (_detailMask != null && _detailMask.isReadable) ? GetPixelValue(_detailMask, x, y) : _defaultDetail;
+                    float r = (_metallic != null && _metallic.isReadable) ? GetPixelValue(_metallic, x, y) : DefaultMetallic;
+                    float g = (_ambientOcclusion != null && _ambientOcclusion.isReadable) ? GetPixelValue(_ambientOcclusion, x, y) : DefaultAO;
+                    float b = (_detailMask != null && _detailMask.isReadable) ? GetPixelValue(_detailMask, x, y) : DefaultDetail;
                     float a = 0f;
 
                     if (_smoothnessMap != null && _smoothnessMap.isReadable)
-                        a = _isRoughnessMap ? 1f - GetPixelValue(_smoothnessMap, x, y) : GetPixelValue(_smoothnessMap, x, y);
+                        a = _invertSmoothness ? 1f - GetPixelValue(_smoothnessMap, x, y) : GetPixelValue(_smoothnessMap, x, y);
                     else
-                        a = _isRoughnessMap ? 1f - _defaultSmoothness : _defaultSmoothness;
+                        a = _invertSmoothness ? 1f - DefaultSmoothness : DefaultSmoothness;
 
                     pixels[y * _textureSize.x + x] = new Color(r, g, b, a);
                 }
@@ -698,6 +439,41 @@ namespace UnityEssentials
                 EditorUtility.DisplayDialog("Import Settings Updated", $"Enabled Read/Write for '{texture.name}'.", "OK");
             }
             else EditorUtility.DisplayDialog("Error", "Failed to retrieve TextureImporter.", "OK");
+        }
+
+        private void FixCrunchCompression(Texture2D texture)
+        {
+            if (texture == null)
+            {
+                EditorUtility.DisplayDialog("No Texture Selected", "Please assign a texture first.", "OK");
+                return;
+            }
+
+            string assetPath = AssetDatabase.GetAssetPath(texture);
+            if (string.IsNullOrEmpty(assetPath))
+            {
+                EditorUtility.DisplayDialog("Invalid Texture", "Cannot find the texture in the project.", "OK");
+                return;
+            }
+
+            TextureImporter importer = AssetImporter.GetAtPath(assetPath) as TextureImporter;
+            if (importer != null)
+            {
+                importer.crunchedCompression = false; // Only disable Crunch
+                importer.isReadable = true;
+                importer.SaveAndReimport();
+                EditorUtility.DisplayDialog("Import Settings Updated", $"Disabled Crunch compression and enabled Read/Write for '{texture.name}'.", "OK");
+            }
+            else EditorUtility.DisplayDialog("Error", "Failed to retrieve TextureImporter.", "OK");
+        }
+
+        private static bool IsCrunchCompressed(Texture2D texture)
+        {
+            if (texture == null) return false;
+            var format = texture.format;
+            return format == TextureFormat.DXT1Crunched ||
+                   format == TextureFormat.DXT5Crunched ||
+                   format == TextureFormat.ETC2_RGBA8Crunched;
         }
     }
 }

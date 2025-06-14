@@ -1,7 +1,9 @@
 {
     "name": "UnityEssentials.MaskMapGenerator.Editor",
     "rootNamespace": "UnityEssentials",
-    "references": [],
+    "references": [
+        "UnityEssentials.EditorWindowDrawer.Editor"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
