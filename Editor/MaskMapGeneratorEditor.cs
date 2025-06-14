@@ -33,7 +33,7 @@ namespace UnityEssentials
             if (GUILayout.Button(new GUIContent("Update Preview Texture", "Generate preview texture"), EditorStyles.toolbarButton))
             {
                 EditorUtility.DisplayProgressBar("Generating Preview", "Please wait...", 0.5f);
-                UpdateTexture(true);
+                TryGenerateTexture(true);
                 EditorUtility.ClearProgressBar();
             }
 
@@ -74,21 +74,6 @@ namespace UnityEssentials
                 GUIContent.none,
                 texture, typeof(Texture2D), false);
 
-            using (new GUILayout.HorizontalScope())
-            {
-                GUILayout.FlexibleSpace();
-                if (texture != null && (!texture.isReadable || IsCrunchCompressed(texture)))
-                {
-                    if (GUILayout.Button("Fix", GUILayout.Width(50), GUILayout.Height(20)))
-                    {
-                        if (!texture.isReadable)
-                            FixTextureImportSettings(texture);
-                        else if (IsCrunchCompressed(texture))
-                            FixCrunchCompression(texture);
-                    }
-                }
-            }
-
             if (texture != null && (texture.isReadable && !IsCrunchCompressed(texture)))
                 GUILayout.Space(20);
 
@@ -102,7 +87,6 @@ namespace UnityEssentials
 
             if (showInvert)
             {
-                // Show invert toggle only for smoothness/roughness
                 _invertSmoothness = EditorGUILayout.Toggle(
                     new GUIContent("Invert Smoothness", "Invert the smoothness/roughness map (Roughness = 1 - Smoothness)"),
                     _invertSmoothness);
