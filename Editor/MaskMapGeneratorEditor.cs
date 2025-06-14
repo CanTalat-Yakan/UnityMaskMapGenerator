@@ -74,7 +74,7 @@ namespace UnityEssentials
                 GUIContent.none,
                 texture, typeof(Texture2D), false);
 
-            if (texture != null && (texture.isReadable && !IsCrunchCompressed(texture)))
+            if (texture != null)
                 GUILayout.Space(20);
 
             if (texture == null)

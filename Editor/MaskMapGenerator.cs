@@ -205,7 +205,8 @@ namespace UnityEssentials
 
         private void ValidateTextureDimensions()
         {
-            var textures = new[] {
+            var textures = new[]
+            {
                 (_metallic, "Metallic"),
                 (_ambientOcclusion, "AO"),
                 (_detailMask, "Detail Mask"),
