@@ -41,7 +41,6 @@ namespace UnityEssentials
                 if (importer == null)
                     continue;
 
-                // Store original settings if not already stored
                 if (!_originalTextureSettings.ContainsKey(path))
                     _originalTextureSettings[path] = new TextureImportSettings
                     {
@@ -49,7 +48,6 @@ namespace UnityEssentials
                         crunchedCompression = importer.crunchedCompression
                     };
 
-                // Set required settings for processing
                 if (!importer.isReadable || importer.crunchedCompression)
                 {
                     importer.isReadable = true;
