@@ -18,9 +18,9 @@ namespace UnityEssentials
         {
             var editor = new MaskMapGenerator();
             editor.Window = new EditorWindowDrawer("Mask Map Packer", new(400, 650))
-                .SetHeader(editor.Header, EditorWindowDrawer.GUISkin.Toolbar)
-                .SetBody(editor.Body, EditorWindowDrawer.GUISkin.Margin)
-                .SetFooter(editor.Footer, EditorWindowDrawer.GUISkin.HelpBox)
+                .SetHeader(editor.Header, EditorWindowStyle.Toolbar)
+                .SetBody(editor.Body, EditorWindowStyle.Margin)
+                .SetFooter(editor.Footer, EditorWindowStyle.HelpBox)
                 .GetRepaintEvent(out editor.Repaint)
                 .GetCloseEvent(out editor.Close)
                 .ShowUtility();
