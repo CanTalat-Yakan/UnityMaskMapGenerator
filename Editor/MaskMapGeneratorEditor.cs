@@ -103,19 +103,16 @@ namespace UnityEssentials
                 using (new GUILayout.HorizontalScope())
                 {
                     GUILayout.Label(_finalTexture, GUILayout.Width(128), GUILayout.Height(128));
-                    using (new GUILayout.VerticalScope())
-                    {
-                        GUILayout.Space(4);
-                        GUILayout.Label($"Size: {_finalTexture.width} x {_finalTexture.height}", EditorStyles.miniLabel);
-                        GUILayout.Label($"Format: {_finalTexture.format}", EditorStyles.miniLabel);
-                        GUILayout.Space(2);
-                        GUILayout.Label($"MipMap: {_finalTexture.mipmapCount}", EditorStyles.miniLabel);
-                        GUILayout.Label($"sRGB: {_finalTexture.isDataSRGB}", EditorStyles.miniLabel);
-                        GUILayout.Label($"Is Readable: {_finalTexture.isReadable}", EditorStyles.miniLabel);
-                        GUILayout.Label($"Wrap Mode: {_finalTexture.wrapMode}", EditorStyles.miniLabel);
-                        GUILayout.Label($"Filter Mode: {_finalTexture.filterMode}", EditorStyles.miniLabel);
-                        GUILayout.Label($"Aniso Level: {_finalTexture.anisoLevel}", EditorStyles.miniLabel);
-                    }
+
+                    string textureInfo = "\n";
+                    textureInfo += $"Size: {_finalTexture.width} x {_finalTexture.height}\n";
+                    textureInfo += $"Format: {_finalTexture.format}\n";
+                    textureInfo += $"sRGB: {_finalTexture.isDataSRGB}\n\n";
+                    textureInfo += $"MipMap: {_finalTexture.mipmapCount}\n";
+                    textureInfo += $"Aniso Level: {_finalTexture.anisoLevel}\n\n";
+                    textureInfo += $"Wrap Mode: {_finalTexture.wrapMode}\n";
+                    textureInfo += $"Filter Mode: {_finalTexture.filterMode}\n";
+                    GUILayout.Label(textureInfo, EditorStyles.centeredGreyMiniLabel);
                 }
             }
             else
