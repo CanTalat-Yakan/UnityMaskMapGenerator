@@ -17,7 +17,7 @@ namespace UnityEssentials
         public static void ShowWindow()
         {
             var editor = new MaskMapGenerator();
-            editor.Window = new EditorWindowDrawer("Mask Map Packer", new(400, 650))
+            editor.Window = new EditorWindowDrawer("Mask Map Packer", new(350, 650))
                 .SetHeader(editor.Header, EditorWindowStyle.Toolbar)
                 .SetBody(editor.Body, EditorWindowStyle.Margin)
                 .SetFooter(editor.Footer, EditorWindowStyle.HelpBox)
@@ -25,7 +25,7 @@ namespace UnityEssentials
                 .GetCloseEvent(out editor.Close)
                 .ShowUtility();
 
-            editor.Window.maxSize = new Vector2(400, 650);
+            editor.Window.maxSize = new Vector2(350, 650);
         }
 
         private void Header()
@@ -118,8 +118,8 @@ namespace UnityEssentials
             else
             {
                 string footerInfoText =
-                    "Ensure all textures have matching dimensions and Read/Write enabled,"
-                    + "\nsRGB in their import settings for best results.";
+                    "Ensure all textures have matching dimensions, Read/Write, "
+                    + "and sRGB enabled in their import settings.";
                 GUILayout.Label(footerInfoText, EditorStyles.wordWrappedMiniLabel);
             }
         }
